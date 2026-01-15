@@ -1,0 +1,8 @@
+print(type("12345"))
+print(type(12345))
+print(type(bool))
+print(type(True))
+print(type(12.34))
+print(2 + 2)
+print(300 + 255)
+print("Number of letters in your name: " + str(len((input("Enter your name")))))
