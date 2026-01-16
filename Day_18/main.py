@@ -60,13 +60,13 @@ from turtle import Turtle, Screen
 painting_colors = [(242, 117, 31), (240, 79, 94), (240, 95, 34), (154, 113, 8), (128, 215, 206), (212, 153, 163), (150, 186, 224), (167, 45, 137)]
 
 sammy = Turtle()
-sammy.shape("turtle")
-sammy.color("cyan3")
 sammy.speed("fastest")
 sammy.penup()
+sammy.hideturtle()
 
-initial_y = -200
-initial_x = -200
+
+initial_y = -250
+initial_x = -225
 sammy.setx(initial_x)
 sammy.sety(initial_y)
 
