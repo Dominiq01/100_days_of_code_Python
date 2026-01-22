@@ -34,15 +34,25 @@ class Snake:
 
     def create_snake(self):
         for _ in range(SNAKE_LENGTH):
-            body_part = Turtle(shape="square")
-            body_part.color("white")
-            body_part.penup()
-            body_part.goto(x=self.start_x, y=0)
+            self.create_body_part(x=self.start_x, y=0)
             self.start_x -= 20
-            self.snake.append(body_part)
+
+    def extend_body(self):
+        tail_x = self.snake[-1].xcor()
+        tail_y = self.snake[-1].ycor()
+        self.create_body_part(tail_x, tail_y)
+
+
+    def create_body_part(self, x, y):
+        body_part = Turtle(shape="square")
+        body_part.color("white")
+        body_part.speed("fastest")
+        body_part.penup()
+        body_part.goto(x=x, y=y)
+        self.snake.append(body_part)
 
     def move(self):
-        prev_pos = self.snake[0].pos()
+        prev_pos = self.head.pos()
 
         for segment_num in range(0, len(self.snake)):
             curr_pos = self.snake[segment_num].pos()
