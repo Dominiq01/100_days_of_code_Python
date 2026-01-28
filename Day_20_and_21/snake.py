@@ -60,3 +60,10 @@ class Snake:
             prev_pos = curr_pos
 
         self.move_forward()
+
+    def reset(self):
+        for body_part in self.snake:
+            body_part.hideturtle()
+        self.snake = []
+        self.create_snake()
+        self.head = self.snake[0]

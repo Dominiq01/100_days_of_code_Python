@@ -10,9 +10,7 @@ screen.bgcolor("black")
 screen.title("Snake Game")
 screen.tracer(0)
 
-
 game_is_on = True
-
 
 snake = Snake()
 food = Food()
@@ -37,10 +35,10 @@ while game_is_on:
         scoreboard.add_to_score()
         snake.extend_body()
     if head_x > 290 or head_x < -300 or head_y > 300 or head_y < -290:
-        scoreboard.game_over()
-        game_is_on = False
+        scoreboard.reset()
+        snake.reset()
     for segment in snake.snake[1:]:
         if snake.head.distance(segment) < 10:
-            game_is_on = False
-            scoreboard.game_over()
+            scoreboard.reset()
+            snake.reset()
 screen.exitonclick()
