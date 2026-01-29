@@ -15,16 +15,19 @@ turtle.shape(image)
 correct_answers = []
 states_data = StatesData()
 states_list = states_data.states_list
+content = pandas.DataFrame()
 
 while len(correct_answers) < 50:
 
     answer_state = screen.textinput(title=f"{len(correct_answers)}/50 States Correct", prompt="What's another state's name?").title()
 
     if answer_state == "Exit":
-        content = pandas.DataFrame()
         for state in states_list:
             if state not in correct_answers:
-                print(states_data.data[states_data.data.state == state])
+                data_to_append = states_data.data[states_data.data.state == state]
+                content = pandas.concat([content, data_to_append]).reset_index(drop=True)
+                content.index = content.index + 1
+        content.to_csv("states_not_guessed.csv")
 
         break
 
@@ -35,4 +38,3 @@ while len(correct_answers) < 50:
         state_name_display = StateNameDisplay()
         state_name_display.display_name(state_coords, answer_state)
 
-turtle.mainloop()
