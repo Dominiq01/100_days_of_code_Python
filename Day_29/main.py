@@ -2,8 +2,11 @@ from tkinter import *
 from tkinter import messagebox
 from random import choice, randint, shuffle
 import pyperclip
+import json
 FONT_NAME = "Courier"
 FONT_SIZE = 11
+
+
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
 def generate_password():
@@ -14,8 +17,9 @@ def generate_password():
     numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
 
-    password_list = [choice(letters) for _ in range(randint(8, 10))] + [choice(symbols) for _ in range(randint(2, 4))] + [
-        choice(numbers) for _ in range(randint(2, 4))]
+    password_list = [choice(letters) for _ in range(randint(8, 10))] + [choice(symbols) for _ in
+                                                                        range(randint(2, 4))] + [
+                        choice(numbers) for _ in range(randint(2, 4))]
 
     shuffle(password_list)
 
@@ -24,10 +28,21 @@ def generate_password():
     input_password.insert(0, password)
 
 
+# ---------------------------- SEARCH WEBSITE ------------------------------- #
+
+def search_website():
+    user_input = input_website.get().title()
+
+    with open("data.txt") as data_file:
+        data = json.load(data_file)
+        print(data)
+
+    # messagebox.showinfo(f"{user_input}", message=f"Email: {}")
+
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
-def valid_inputs(website, email, password):
-    if website == "" or email == "" or password == "":
+def valid_inputs(website, password):
+    if website == "" or password == "":
         return False
     return True
 
@@ -36,16 +51,27 @@ def save_password():
     website = input_website.get()
     email_or_usnm = input_username.get()
     password = input_password.get()
+    new_data = {
+        website: {
+        "email": email_or_usnm,
+        "password": password
+    }}
 
-    if valid_inputs(website, email_or_usnm, password):
-        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered\nEmail: {email_or_usnm}\n"
-                                                              f"Password: {password} \nIs it ok to save?")
-        if is_ok:
-            with open("data.txt", mode="a") as data:
-                data.write(f"{website}   |   {email_or_usnm}   |   {password}\n")
+    if valid_inputs(website, password):
 
-            input_password.delete(0, 'end')
-            input_website.delete(0, 'end')
+        try:
+            with open("data.json", mode="r") as data_file:
+                data = json.load(fp=data_file)
+                data.update(new_data)
+        except FileNotFoundError:
+            with open("data.json", mode="w") as data_file:
+                json.dump(new_data, data_file, indent=4)
+        else:
+            with open("data.json", mode="w") as data_file:
+                json.dump(data, data_file, indent=4)
+
+                input_password.delete(0, 'end')
+                input_website.delete(0, 'end')
     else:
         messagebox.showerror(title="Oops", message="Please don't leave any fields empty!")
 
@@ -66,8 +92,11 @@ label_website = Label(text="Website:", font=(FONT_NAME, FONT_SIZE))
 label_website.grid(column=0, row=1)
 
 input_website = Entry(width=35)
-input_website.grid(column=1, row=1, columnspan=2, sticky="EW")
+input_website.grid(column=1, row=1, sticky="EW")
 input_website.focus()
+
+btn_search_website = Button(text="Search", command=search_website)
+btn_search_website.grid(column=2, row=1, sticky="EW")
 
 label_username = Label(text="Email/Username:", font=(FONT_NAME, FONT_SIZE))
 label_username.grid(column=0, row=2)
