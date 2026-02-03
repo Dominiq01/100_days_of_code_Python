@@ -1,8 +1,28 @@
 from tkinter import *
 from tkinter import messagebox
+from random import choice, randint, shuffle
+import pyperclip
 FONT_NAME = "Courier"
 FONT_SIZE = 11
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
+
+def generate_password():
+    input_password.delete(0, 'end')
+    letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+               'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+               'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    numbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    symbols = ['!', '#', '$', '%', '&', '(', ')', '*', '+']
+
+    password_list = [choice(letters) for _ in range(randint(8, 10))] + [choice(symbols) for _ in range(randint(2, 4))] + [
+        choice(numbers) for _ in range(randint(2, 4))]
+
+    shuffle(password_list)
+
+    password = "".join(password_list)
+    pyperclip.copy(password)
+    input_password.insert(0, password)
+
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
@@ -11,6 +31,7 @@ def valid_inputs(website, email, password):
         return False
     return True
 
+
 def save_password():
     website = input_website.get()
     email_or_usnm = input_username.get()
@@ -18,7 +39,7 @@ def save_password():
 
     if valid_inputs(website, email_or_usnm, password):
         is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered\nEmail: {email_or_usnm}\n"
-                                                      f"Password: {password} \nIs it ok to save?")
+                                                              f"Password: {password} \nIs it ok to save?")
         if is_ok:
             with open("data.txt", mode="a") as data:
                 data.write(f"{website}   |   {email_or_usnm}   |   {password}\n")
@@ -27,6 +48,7 @@ def save_password():
             input_website.delete(0, 'end')
     else:
         messagebox.showerror(title="Oops", message="Please don't leave any fields empty!")
+
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -60,7 +82,7 @@ label_password.grid(column=0, row=3)
 input_password = Entry()
 input_password.grid(column=1, row=3, sticky="EW")
 
-btn_generate_password = Button(text="Generate Password")
+btn_generate_password = Button(text="Generate Password", command=generate_password)
 btn_generate_password.grid(column=2, row=3, sticky="EW")
 
 btn_add = Button(text="Add", command=save_password)
