@@ -1,10 +1,22 @@
 {
+    "web": {
+        "email": "dominik.test@gmail.pl",
+        "password": "wU%Qv$fPy#6KR7"
+    },
+    "web2": {
+        "email": "dominik.test@gmail.pl",
+        "password": "y)awfPOlt4sg)4"
+    },
+    "deeea": {
+        "email": "dominik.test@gmail.pl",
+        "password": "1(Hvud!QFc59Ke%C+"
+    },
+    "eee2": {
+        "email": "dominik.test@gmail.pl",
+        "password": "jr*)oin4AbDp53*h"
+    },
     "eee": {
         "email": "dominik.test@gmail.pl",
-        "password": "%a#7x98RdiJa*MJ"
-    },
-    "eeee2": {
-        "email": "dominik.test@gmail.pl",
-        "password": "AeK9$oj#**QM028P"
+        "password": "GDc5!zMS2Yf$KA1"
     }
 }

@@ -1,11 +1,12 @@
+import tkinter
 from tkinter import *
 from tkinter import messagebox
 from random import choice, randint, shuffle
 import pyperclip
 import json
+import tksheet
 FONT_NAME = "Courier"
 FONT_SIZE = 11
-
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 
@@ -32,12 +33,22 @@ def generate_password():
 
 def search_website():
     user_input = input_website.get().title()
-
-    with open("data.txt") as data_file:
-        data = json.load(data_file)
-        print(data)
-
-    # messagebox.showinfo(f"{user_input}", message=f"Email: {}")
+    searched_data = {}
+    try:
+        with open("data.json", mode="r") as data_file:
+            data = json.load(fp=data_file)
+            for key in data.keys():
+                if key.lower() == user_input.lower():
+                    searched_data = data[key]
+            print(searched_data)
+    except FileNotFoundError:
+        messagebox.showerror(title="Error", message="No data file found.")
+    else:
+        if searched_data:
+            messagebox.showinfo(f"{user_input}", message=f"Email: {searched_data["email"]}"
+                                                     f"\nPassword: {searched_data["password"]}")
+        else:
+            messagebox.showinfo(title="No such website", message="You don't have currently any website with this named saved.")
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
@@ -69,12 +80,31 @@ def save_password():
         else:
             with open("data.json", mode="w") as data_file:
                 json.dump(data, data_file, indent=4)
+        finally:
+            update_table()
+            input_website.delete(0, 'end')
+            input_password.delete(0, 'end')
 
-                input_password.delete(0, 'end')
-                input_website.delete(0, 'end')
     else:
         messagebox.showerror(title="Oops", message="Please don't leave any fields empty!")
 
+
+def update_table():
+    try:
+        with open("data.json", mode="r") as data_file:
+            data = json.load(data_file)
+
+            # Extract names for rows and details for cells
+            row_names = list(data.keys())
+            sheet_data = [[details["email"], details["password"]] for details in data.values()]
+
+            # Update the existing sheet object
+            sheet.set_sheet_data(sheet_data)
+            sheet.row_index(row_names)
+            sheet.refresh()
+
+    except (FileNotFoundError, json.JSONDecodeError):
+        pass
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -116,5 +146,16 @@ btn_generate_password.grid(column=2, row=3, sticky="EW")
 
 btn_add = Button(text="Add", command=save_password)
 btn_add.grid(column=1, columnspan=2, row=4, sticky="EW")
+
+sheet = tksheet.Sheet(
+    window,
+    headers=["email", "password"],
+    width=500,
+    height=200,
+    default_column_width=200
+)
+sheet.grid(column=0, row=5, columnspan=3, pady=20, sticky="nsew")
+sheet.enable_bindings()
+update_table()
 
 window.mainloop()
