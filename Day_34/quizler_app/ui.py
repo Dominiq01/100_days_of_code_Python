@@ -1,4 +1,3 @@
-import time
 from tkinter import *
 
 from Day_34.quizler_app.quiz_brain import QuizBrain
