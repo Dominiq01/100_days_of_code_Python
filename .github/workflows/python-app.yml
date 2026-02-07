@@ -2,9 +2,8 @@ name: Daily Rain Alert
 
 on:
   schedule:
-    # 5:00 AM UTC = 6:00 AM CET (Poland Time)
     - cron: '0 5 * * *'
-  workflow_dispatch: # Allows you to run it manually for testing
+  workflow_dispatch: # Allows to run it manually for testing
 
 jobs:
   build:
