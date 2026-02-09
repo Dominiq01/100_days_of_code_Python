@@ -1,67 +1,58 @@
 from twilio.rest import Client
 import requests
-from datetime import datetime as dt
-import datetime
 from newsapi import NewsApiClient
+import os
 
-STOCK = "NVDA"
-COMPANY_NAME = "Nvidia"
+API_KEY_ALPHA = os.environ.get("ALPHA_VANTAGE_KEY")
+API_KEY_NEWS = os.environ.get("NEWS_API_KEY")
+TWILIO_SID = os.environ.get("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+PHONE_NUM = os.environ["PHONE_NUMBER"]
+
+SYMBOL = "BTC"
+CURRENCY_NAME = "bitcoin"
+MY_PERCENT_DIFF = 10
 
 params = {
-    "function": "TIME_SERIES_DAILY",
-    "symbol": STOCK,
-    "outputsize": 2,
-    "apikey": "API_KEY"
+    "function": "DIGITAL_CURRENCY_DAILY",
+    "symbol": SYMBOL,
+    "market": "USD",
+    "apikey": API_KEY_ALPHA
 }
 
 url = 'https://www.alphavantage.co/query'
 res = requests.get(url, params)
 res.raise_for_status()
-data = res.json()["Time Series (Daily)"]
-today = dt.now().date()
-day_of_week = dt.now().weekday()
-print(day_of_week)
+data = res.json()["Time Series (Digital Currency Daily)"]
+data_list  = [value for index, value in data.items()][:2]
 
+price_yesterday = float(data_list[0]["4. close"])
+price_two_days_ago = float(data_list[1]["4. close"])
 
-if day_of_week == 6:
-    yesterday = str(today - datetime.timedelta(days=2))
-    two_days_ago = str(today - datetime.timedelta(days=3))
-else:
-    yesterday = str(today - datetime.timedelta(days=1))
-    two_days_ago = str(today - datetime.timedelta(days=2))
-print(yesterday)
-print(two_days_ago)
-
-data_to_analyse = { date: float(value["4. close"]) for date, value in data.items() if date == two_days_ago or date == yesterday}
-
-price_yesterday = data_to_analyse[yesterday]
-price_two_days_ago = data_to_analyse[two_days_ago]
-
-print(price_yesterday - price_two_days_ago)
 avg =  (price_yesterday + price_two_days_ago) / 2
 percent_diff = 100 * (price_yesterday - price_two_days_ago) / avg
-print(data)
-print(data_to_analyse)
+
 print(percent_diff)
 
-if percent_diff < -5 or percent_diff > 5:
-    newsapi = NewsApiClient(api_key="API_KEY_NEWS")
+if percent_diff < -MY_PERCENT_DIFF or percent_diff > MY_PERCENT_DIFF:
+    newsapi = NewsApiClient(api_key=API_KEY_NEWS)
 
-    top_headlines = newsapi.get_top_headlines(q=COMPANY_NAME,
-                                              category='business')["articles"][:3]
+    top_headlines = newsapi.get_everything(q=CURRENCY_NAME)["articles"][:3]
 
-    print(top_headlines)
-    if percent_diff < -5:
+    # print(top_headlines)
+    if percent_diff < -MY_PERCENT_DIFF:
         sign = "📉"
     else:
         sign = "📈"
 
-    message = f"{STOCK}:{sign} {round(percent_diff, 2)}%\n"
+    message_to_sent = f"{SYMBOL}:{sign} {round(percent_diff, 2)}%\n"
     for article in top_headlines:
-        message += f"Headline: {article["title"]}\nBrief: {article["description"]}\n"
-    print(message)
+        message_to_sent += f"\nHeadline: {article["title"]}\nBrief: {article["description"]}\n{article["url"]}\n"
+    # print(message_to_sent)
 
-
-## STEP 3: Use https://www.twilio.com
-# Send a seperate message with the percentage change and each article's title and description to your phone number. 
-
+    client = Client(TWILIO_SID, TWILIO_AUTH_TOKEN)
+    message = client.messages.create(
+        from_='whatsapp:+14155238886',
+        body=message_to_sent,
+        to=f'whatsapp:{PHONE_NUM}'
+    )
