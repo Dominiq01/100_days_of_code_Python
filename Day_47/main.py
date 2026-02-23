@@ -2,9 +2,12 @@
 import requests
 import os
 import smtplib
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+load_dotenv()
 my_email = "dominik.wedzina1245@gmail.com"
 smtp = "smtp.gmail.com"
-from bs4 import BeautifulSoup
+password = os.environ.get("GMAIL_KEY")
 
 header = {
     "User-Agent": os.environ.get("HEADER")
@@ -20,9 +23,9 @@ decimal_price = amazon_soup.find("span", class_="a-price-fraction").text
 curr_price = float((whole_price + decimal_price).replace(',', '.'))
 print(curr_price)
 
-# if curr_price < 8:
-#     with smtplib.SMTP(smtp) as connection:
-#         connection.starttls()
-#         connection.login(user=my_email, password=password)
-#         connection.sendmail(from_addr=my_email, to_addrs="dominik.wedzina@onet.pl",
-#                             msg=f"PRICE ALERT!\n\n{curr_price}")
+if curr_price < 8:
+    with smtplib.SMTP(smtp) as connection:
+        connection.starttls()
+        connection.login(user=my_email, password=password)
+        connection.sendmail(from_addr=my_email, to_addrs="dominik.wedzina@onet.pl",
+                            msg=f"PRICE ALERT!\n\n{curr_price}")
