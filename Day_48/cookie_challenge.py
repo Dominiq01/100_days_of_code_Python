@@ -19,34 +19,32 @@ try:
     cookie = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.ID, "bigCookie")))
     cookies_banner_btn = WebDriverWait(driver, delay).until(EC.presence_of_element_located((By.CLASS_NAME, "cc_btn_accept_all")))
     cookies_banner_btn.click()
+    count = 0
     while True:
         cookie.click()
-
+        count+=1
         products = driver.find_elements(By.CSS_SELECTOR, ".product.unlocked.enabled")
         upgrades = driver.find_elements(By.CSS_SELECTOR, ".crate.upgrade.enabled")
-        prices = [float(price.text) for price in driver.find_elements(By.CLASS_NAME, "price") if price.text != ""]
+        available_products = driver.find_elements(By.CSS_SELECTOR, ".product.unlocked.enabled")
+
         cookies = float(driver.find_element(By.ID, "cookies").text.split(" ")[0])
 
-        print(prices)
-        # print(cookies)
-        # for price in prices:
-        #     if max(prices) <= cookies:
-        #         price.click()
-        if products:
-            print(products)
-            for product in products:
-                print(product.text)
+        if count > 10:
+            if available_products:
                 try:
-                    driver.execute_script("arguments[0].click();", product)
+                    best_bet = available_products[-1]
+                    driver.execute_script("arguments[0].click();", best_bet)
                 except StaleElementReferenceException:
                     pass
-        time.sleep(5)
-        if upgrades:
-            for upgrade in upgrades:
-                try:
-                    driver.execute_script("arguments[0].click();", upgrade)
-                except StaleElementReferenceException:
-                    pass
+
+            count = 0
+
+            if upgrades:
+                for upgrade in upgrades:
+                    try:
+                        driver.execute_script("arguments[0].click();", upgrade)
+                    except StaleElementReferenceException:
+                        pass
 except TimeoutException:
     print("Loading took too much time!")
 

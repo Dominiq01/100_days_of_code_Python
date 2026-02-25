@@ -15,16 +15,22 @@ driver = webdriver.Chrome(options=chrome_options)
 # .tag_name
 # .get_attribute
 # print(add_to_cart_btn.text)
-driver.get("https://www.python.org/")
-names = [el.text for el in driver.find_elements(By.CSS_SELECTOR, ".event-widget ul.menu li a")]
-dates = [el.text for el in driver.find_elements(By.CSS_SELECTOR, ".event-widget ul.menu li time")]
-print(names)
-print(dates)
-new_dict = {}
+# driver.get("https://www.python.org/")
+# names = [el.text for el in driver.find_elements(By.CSS_SELECTOR, ".event-widget ul.menu li a")]
+# dates = [el.text for el in driver.find_elements(By.CSS_SELECTOR, ".event-widget ul.menu li time")]
+# print(names)
+# print(dates)
+# new_dict = {}
+#
+# for i in range(0, len(names)):
+#     new_dict[i] = {"time": dates[i], "name": names[i] }
+#
+# print(new_dict)
+#
+# driver.quit()
 
-for i in range(0, len(names)):
-    new_dict[i] = {"time": dates[i], "name": names[i] }
-
-print(new_dict)
-
-driver.quit()
+stringgg = "1,100"
+string2 = stringgg.replace(",", ".")
+nummm = float(string2)
+print(nummm)
+print(string2)
