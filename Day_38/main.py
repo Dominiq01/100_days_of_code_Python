@@ -43,7 +43,7 @@ for input in split_input:
         "workout": {
             "date": today,
             "time": time,
-            "exercise": res_data["name"].title(),
+            "exercise": res_data["name"].title_class(),
             "duration": res_data["duration_min"],
             "calories": res_data["nf_calories"]
         }
