@@ -83,6 +83,13 @@ def book_or_waitlist(time_el, container):
         all_new_bookings.append(f"[NEW WAITLIST] {title_class.text} on {container_date.text}")
     else:
         btn.click()
+        time.sleep(2)
+        if btn.text == "Book Class":
+            global book_retries
+            book_retries -= 1
+
+            # class -error-spin-
+            retry(book_or_waitlist, book_retries)
         print(f"✓ Booked: {title_class.text} on {container_date.text}")
         booking_summary["Classes booked"] = booking_summary["Classes booked"] + 1
         all_new_bookings.append(f"[NEW BOOKING] {title_class.text} on {container_date.text}")
@@ -108,15 +115,21 @@ def login():
     submit_btn = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
         (By.ID, "submit-button")))
     submit_btn.click()
+    time.sleep(2)
+    expected_url = "https://appbrewery.github.io/gym/schedule/"
+    if expected_url in driver.current_url:
+        check_classes()
+
     error = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
         (By.ID, "error-message")))
     print(error.text)
     if error.text == "Network request failed. Please try again.":
         login_retries-= 1
-        retry(login, login_retries, error)
         print(f"Current number of retries: {login_retries}")
+        retry(login, login_retries, error)
 
 def check_classes():
+    print("Checking...")
     class_containers = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.XPATH, "//p[starts-with(@id, 'class-time-')]/ancestor::div[4]"))
     )
@@ -139,7 +152,7 @@ def retry(func, retries=7, description=None):
 
 driver.get(GYM_URL)
 login()
-check_classes()
-print_summary()
-verify_bookings()
+#
+# print_summary()
+# verify_bookings()
 # driver.quit()
