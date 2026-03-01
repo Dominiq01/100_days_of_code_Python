@@ -1,10 +1,10 @@
 import os
 import time
+
+from selenium.common import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime as dt, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 
 ACCOUNT_EMAIL = "dominik@test2.com"  # The email you registered with
@@ -64,7 +64,10 @@ def verify_bookings():
             f"❌ MISMATCH: Missing {all_classes_num - found_bookings_num} bookings")
 
 book_retries = 7
+waitlist_retries = 7
 def book_or_waitlist(time_el, container):
+    global book_retries
+    global waitlist_retries
     parent = time_el.find_element(By.XPATH, "ancestor::div[2]")
     container_date = container.find_element(By.TAG_NAME, "h2")
     title_class = parent.find_element(By.TAG_NAME, "h3")
@@ -77,60 +80,71 @@ def book_or_waitlist(time_el, container):
         print(f"✓ Already on waitlist: {title_class.text} on {container_date.text}")
         booking_summary["Already booked/waitlisted"] = booking_summary["Already booked/waitlisted"] + 1
     elif btn.text == "Join Waitlist":
-        btn.click()
-        print(f"✓ Joined waitlist for: {title_class.text} on {container_date.text}")
-        booking_summary["Waitlists joined"] = booking_summary["Waitlists joined"] + 1
-        all_new_bookings.append(f"[NEW WAITLIST] {title_class.text} on {container_date.text}")
+        try:
+            driver.execute_script("arguments[0].click();", btn)
+            waitlist_retries -= 1
+            error = WebDriverWait(container, 5).until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[id^='class-error-']")))
+            print(error.text)
+            print(f"Error waitlisting {title_class.text}. Retrying...")
+            retry(book_or_waitlist, waitlist_retries, None, time_el, container)
+        except TimeoutException:
+            print(f"✓ Joined waitlist for: {title_class.text} on {container_date.text}")
+            booking_summary["Waitlists joined"] = booking_summary["Waitlists joined"] + 1
+            all_new_bookings.append(f"[NEW WAITLIST] {title_class.text} on {container_date.text}")
+            booking_summary["Total Tuesday 6pm & Thursday classes processed"] = booking_summary[
+                                                                                    "Total Tuesday 6pm & Thursday classes processed"] + 1
     else:
-        btn.click()
-        time.sleep(2)
-        if btn.text == "Book Class":
-            global book_retries
+        try:
+            driver.execute_script("arguments[0].click();", btn)
+            WebDriverWait(container, 5).until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "div[id^='class-error-']")))
+            print(f"Error booking {title_class.text}. Retrying...")
             book_retries -= 1
-
-            # class -error-spin-
-            retry(book_or_waitlist, book_retries)
-        print(f"✓ Booked: {title_class.text} on {container_date.text}")
-        booking_summary["Classes booked"] = booking_summary["Classes booked"] + 1
-        all_new_bookings.append(f"[NEW BOOKING] {title_class.text} on {container_date.text}")
-
-    booking_summary["Total Tuesday 6pm & Thursday classes processed"] = booking_summary[
+            retry(book_or_waitlist, book_retries, None, time_el, container)
+        except TimeoutException:
+            print(f"✓ Booked: {title_class.text} on {container_date.text}")
+            booking_summary["Classes booked"] = booking_summary["Classes booked"] + 1
+            all_new_bookings.append(f"[NEW BOOKING] {title_class.text} on {container_date.text}")
+            booking_summary["Total Tuesday 6pm & Thursday classes processed"] = booking_summary[
                                                                             "Total Tuesday 6pm & Thursday classes processed"] + 1
+
 
 
 login_retries = 7
 def login():
     global login_retries
-    login_btn = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
+    login_btn = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
         (By.ID, "login-button")))
     login_btn.click()
-    email_input = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
+    email_input = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
         (By.ID, "email-input")))
     email_input.clear()
     email_input.send_keys(ACCOUNT_EMAIL)
-    password_input = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
+    password_input = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
         (By.ID, "password-input")))
     password_input.clear()
     password_input.send_keys(ACCOUNT_PASSWORD)
-    submit_btn = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
+    submit_btn = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
         (By.ID, "submit-button")))
     submit_btn.click()
-    time.sleep(2)
-    expected_url = "https://appbrewery.github.io/gym/schedule/"
-    if expected_url in driver.current_url:
-        check_classes()
-
-    error = WebDriverWait(driver, 100).until(EC.presence_of_element_located(
+    # time.sleep(2)
+    # expected_url = "https://appbrewery.github.io/gym/schedule/"
+    # if expected_url in driver.current_url:
+    try:
+        error = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
         (By.ID, "error-message")))
-    print(error.text)
-    if error.text == "Network request failed. Please try again.":
+
         login_retries-= 1
         print(f"Current number of retries: {login_retries}")
-        retry(login, login_retries, error)
+        retry(login, login_retries, error.text)
+    except TimeoutException:
+        check_classes()
+
 
 def check_classes():
     print("Checking...")
-    class_containers = WebDriverWait(driver, 10).until(
+    class_containers = WebDriverWait(driver, 5).until(
         EC.presence_of_all_elements_located((By.XPATH, "//p[starts-with(@id, 'class-time-')]/ancestor::div[4]"))
     )
 
@@ -140,11 +154,14 @@ def check_classes():
             for time_el in time_elements:
                 if time_el.text == "Time: 6:00 PM":
                     book_or_waitlist(time_el, container)
+    time.sleep(2)
+    print_summary()
+    verify_bookings()
 
-def retry(func, retries=7, description=None):
+def retry(func, retries=7, description=None, *args):
     if retries > 0:
         print(description)
-        func()
+        func(*args)
     else:
         print("Too many attempts. Please try again later.")
         return
@@ -152,7 +169,4 @@ def retry(func, retries=7, description=None):
 
 driver.get(GYM_URL)
 login()
-#
-# print_summary()
-# verify_bookings()
-# driver.quit()
+
