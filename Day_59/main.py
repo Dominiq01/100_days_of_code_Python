@@ -1,7 +1,9 @@
 import requests
 from flask import Flask, render_template
 import random
+from flask import request
 from datetime import datetime as dt
+
 app = Flask(__name__)
 
 
@@ -13,7 +15,9 @@ def home():
     print(posts_data)
     date = dt.now()
     formatted_date = date.strftime("%A %d, %Y")
-    return render_template("index.html", title="Dominik Blog", subtitle="A Blog created by Dominik", img="../static/assets/img/home-bg.jpg", posts=posts_data, date=formatted_date)
+    return render_template("index.html", title="Dominik Blog", subtitle="A Blog created by Dominik",
+                           img="../static/assets/img/home-bg.jpg", posts=posts_data, date=formatted_date)
+
 
 @app.route('/post/<post_id>')
 def get_post(post_id):
@@ -21,16 +25,29 @@ def get_post(post_id):
     res_blog.raise_for_status()
     posts_data = res_blog.json()
     post = [post_data for post_data in posts_data if post_data["id"] == int(post_id)][0]
-    return render_template("post.html", title=post["title"], subtitle=post["subtitle"], img=post["image_url"], blog_post=post)
+    return render_template("post.html", title=post["title"], subtitle=post["subtitle"], img=post["image_url"],
+                           blog_post=post)
+
 
 @app.route('/about')
 def about():
-    return render_template("about.html", title="About Me", subtitle="This is what I do.", img="../static/assets/img/about-bg.jpg")
+    return render_template("about.html", title="About Me", subtitle="This is what I do.",
+                           img="../static/assets/img/about-bg.jpg")
 
-@app.route('/contact')
+@app.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template("contact.html", title="Contact Me", subtitle="Have questions? I have answers.", img="../static/assets/img/contact-bg.jpg")
+    if request.method == 'POST':
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        message = request.form['message']
+        print(name)
+        return render_template("contact.html", title="Successfully sent your message!", subtitle="Have questions? I have answers.",
+                           img="../static/assets/img/contact-bg.jpg")
+    else:
+        return render_template("contact.html", title="Contact Me", subtitle="Have questions? I have answers.",
+                           img="../static/assets/img/contact-bg.jpg")
+
+
 if __name__ == "__main__":
     app.run(debug=True)
-
-
