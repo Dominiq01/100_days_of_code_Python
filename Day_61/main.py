@@ -1,5 +1,6 @@
-from flask import Flask, render_template, redirect
 from login_form import LoginForm
+from flask_bootstrap import Bootstrap5
+from flask import Flask, render_template, redirect
 '''
 Red underlines? Install the required packages first: 
 Open the Terminal in PyCharm (bottom left). 
@@ -14,6 +15,7 @@ This will install the packages from requirements.txt for this project.
 '''
 
 app = Flask(__name__)
+bootstrap = Bootstrap5(app)
 app.secret_key = "some0secret0string"
 
 
