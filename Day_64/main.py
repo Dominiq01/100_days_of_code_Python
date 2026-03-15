@@ -8,13 +8,18 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 from rate_movie_form import RateMovieForm
+from add_movie_form import AddMovieForm
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap5(app)
 
+
 # CREATE DB
 class Base(DeclarativeBase):
     pass
+
 
 db = SQLAlchemy(model_class=Base)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///new-books-collection.db"
@@ -33,6 +38,7 @@ class Movie(db.Model):
     review: Mapped[str] = mapped_column(nullable=False)
     img_url: Mapped[str] = mapped_column(nullable=False)
 
+
 @app.route("/")
 def home():
     with app.app_context():
@@ -41,6 +47,49 @@ def home():
         books_count = len(all_movies)
         print(all_movies)
     return render_template("index.html", all_movies=all_movies)
+
+@app.route("/add/<movie>", methods=['GET', 'POST'])
+def add(movie=None):
+    form = AddMovieForm()
+    if request.method == 'POST':
+        name = form.name.data
+        url = "https://api.themoviedb.org/3/search/movie"
+
+        headers = {
+            "accept": "application/json",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MDNlNjU3ODA5NzcwZjc0YmZjZThmOTE0NjZmNjg2YyIsIm5iZiI6MTc3MzU5ODE1MS41OTMsInN1YiI6IjY5YjZmNWM3NWQ3N2I0OWY0ZTVjOWU5MSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.GDoJjABAnYFltijimj88IgXnNloRlM1YOTKbbBAbQnc"
+        }
+
+        params = {
+            "query": name,
+            "include_adult": False,
+            "language": "en-US",
+            "page": 1
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()['results']
+        print(data)
+        return render_template("select.html", data=data)
+
+
+    with app.app_context():
+        new_movie = Movie(
+            title=movie['original_title'],
+            year=movie['release_date'],
+            description=movie['overview'],
+            rating=0,
+            ranking=0,
+            review="",
+            img_url=f"https://image.tmdb.org/t/p/w500{movie['poster_path']}"
+        )
+        print(new_movie)
+        db.session.add(new_movie)
+        db.session.commit()
+    return redirect('/')
+
+    return render_template("add.html", form=form)
 
 @app.route("/edit/<movie_id>", methods=['GET', 'POST'])
 def edit(movie_id):
@@ -54,6 +103,7 @@ def edit(movie_id):
             return redirect('/')
     return render_template("edit.html", form=form)
 
+
 @app.route("/delete/<movie_id>")
 def delete(movie_id):
     with app.app_context():
@@ -61,6 +111,8 @@ def delete(movie_id):
         db.session.delete(movie_to_delete)
         db.session.commit()
         return redirect("/")
+
+
 
 if __name__ == '__main__':
     with app.app_context():
