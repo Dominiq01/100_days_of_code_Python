@@ -1,0 +1,8 @@
+bootstrap-flask
+flask-ckeditor
+wtforms
+flask-wtf
+werkzeug
+flask
+flask-sqlalchemy
+sqlalchemy
