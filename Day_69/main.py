@@ -1,4 +1,6 @@
 from datetime import date
+
+from dominate.tags import comment
 from flask import Flask, abort, render_template, redirect, url_for, flash, request, g
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
@@ -10,7 +12,7 @@ from sqlalchemy import Integer, String, Text, ForeignKey
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
-from forms import CreatePostForm, RegisterForm, LoginForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 from sqlalchemy.exc import IntegrityError
 from typing import List
 app = Flask(__name__)
@@ -54,6 +56,7 @@ class BlogPost(db.Model):
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
     author: Mapped["User"] = relationship(back_populates="posts")
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    post_comments: Mapped[List["Comment"]] = relationship(back_populates="parent_post")
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -62,6 +65,16 @@ class User(db.Model, UserMixin):
     password: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(1000))
     posts: Mapped[List["BlogPost"]] = relationship(back_populates="author")
+    comments: Mapped[List["Comment"]] = relationship(back_populates="comment_author")
+
+class Comment(db.Model):
+    __tablename__ = "comments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    comment_author: Mapped["User"] = relationship(back_populates="comments")
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    parent_post: Mapped["BlogPost"] = relationship(back_populates="post_comments")
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("blog_posts.id"))
 
 
 with app.app_context():
@@ -127,15 +140,23 @@ def get_all_posts():
     return render_template("index.html", all_posts=posts)
 
 
-# TODO: Allow logged-in users to comment on posts
-@app.route("/post/<int:post_id>")
+@app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
+    form = CommentForm()
     requested_post = db.get_or_404(BlogPost, post_id)
-    return render_template("post.html", post=requested_post)
+
+    if request.method == "POST" and form.validate_on_submit():
+        form_comment = form.comment.data
+        new_comment = Comment(text=form_comment,author_id=current_user.id, post_id=requested_post.id)
+        with app.app_context():
+            db.session.add(new_comment)
+            db.session.commit()
+
+    return render_template("post.html", post=requested_post, form=form)
 
 
-# TODO: Use a decorator so only an admin user can create a new post
 @app.route("/new-post", methods=["GET", "POST"])
+@admin_only
 def add_new_post():
     form = CreatePostForm()
     if form.validate_on_submit():
@@ -153,7 +174,6 @@ def add_new_post():
     return render_template("make-post.html", form=form)
 
 
-# TODO: Use a decorator so only an admin user can edit a post
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @admin_only
 def edit_post(post_id):
@@ -176,8 +196,8 @@ def edit_post(post_id):
     return render_template("make-post.html", form=edit_form, is_edit=True)
 
 
-# TODO: Use a decorator so only an admin user can delete a post
 @app.route("/delete/<int:post_id>")
+@admin_only
 def delete_post(post_id):
     post_to_delete = db.get_or_404(BlogPost, post_id)
     db.session.delete(post_to_delete)
