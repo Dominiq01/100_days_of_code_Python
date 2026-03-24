@@ -1,0 +1,1 @@
+It was lesson about pandas in Google Colab
