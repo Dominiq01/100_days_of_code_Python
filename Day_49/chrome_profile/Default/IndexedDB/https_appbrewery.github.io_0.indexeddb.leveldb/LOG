@@ -1,0 +1,5 @@
+2026/03/02-15:16:23.662 10c Creating DB C:\Users\Utente\PycharmProjects\100_days_of_code_Python\Day_49\chrome_profile\Default\IndexedDB\https_appbrewery.github.io_0.indexeddb.leveldb since it was missing.
+2026/03/02-15:16:23.666 10c Reusing MANIFEST C:\Users\Utente\PycharmProjects\100_days_of_code_Python\Day_49\chrome_profile\Default\IndexedDB\https_appbrewery.github.io_0.indexeddb.leveldb/MANIFEST-000001
+2026/03/02-15:16:24.979 3f18 Level-0 table #5: started
+2026/03/02-15:16:25.002 3f18 Level-0 table #5: 858067 bytes OK
+2026/03/02-15:16:25.004 3f18 Delete type=0 #3
