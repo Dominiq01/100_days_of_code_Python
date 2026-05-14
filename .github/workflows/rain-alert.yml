@@ -2,7 +2,7 @@ name: Daily Rain Alert
 
 on:
   schedule:
-    - cron: '0 5 * * *'
+    - cron: '0 3 * * *'
   workflow_dispatch: # Allows to run it manually for testing
 
 jobs:
