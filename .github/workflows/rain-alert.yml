@@ -2,7 +2,9 @@ name: Daily Rain Alert
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # GitHub cron is UTC. 04:00 UTC = 06:00 in Poland during summer (CEST, UTC+2);
+    # in winter (CET, UTC+1) it lands at 05:00. Good enough for a morning alert.
+    - cron: '0 4 * * *'
   workflow_dispatch: # Allows to run it manually for testing
 
 jobs:
